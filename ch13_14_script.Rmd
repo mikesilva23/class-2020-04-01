@@ -26,16 +26,29 @@ x <- read_rds("ch13_nes.rds")
 
 * The coefficient of raceOther should be around -2.2. Interpret its meaning in the context of someone with a Moderate ideology. Do not use odds ratios.
 
+```{r}
+z_1 <- stan_glm(dvote ~ race + ideology, family = binomial(link = "logit"), data= x, refresh = 0)
+print(z_1)
+```
 
 
 # Scene 2
 
 **Prompt:** Notice how the intercept of `z_1` makes no sense since `ideology` can not be zero. Always check to see if the questions you are asking --- How to interpret the intercept? --- make sense in the context of your data. As RAOS suggests (pages 173ff), it often makes sense to center the data for just this reason. Estimate a new model, `z_2` which is just like `z_1` except that ideology is centered. Interpret the meaning of the intercept.
 
+```{r}
+x <- x %>% 
+  mutate(c_ideology = ideology - 4)
+z_2 <- stan_glm(data = x, family = binomial, dvote ~ race + c_ideology, refresh = 0)
+```
 
 # Scene 3
 
 **Prompt:** Chapter 14 has an extensive discussion about the use of interactions in logistic models. Estimate a new model, `z_3`, which is just `z_2` and an interaction between `race` and `c_ideology`. See pages 222ff for useful discussion.
+
+```{r, cache=TRUE}
+z_3 <- stan_glm(dvote ~ race + c_ideology + race*c_ideology  , family = binomial(link = "logit"), data= x, refresh = 0)
+```
 
 * Interpret the intercept (2.4) of this model. Is that interpretation the same as for model `z_3`? Why or why not?
 
@@ -48,12 +61,22 @@ x <- read_rds("ch13_nes.rds")
 
 **Prompt:** Let's focus on `z_3`. Use `posterior_linpred()` on `z_3` to create a matrix of estimated probabilities. Consider the 3rd column of this matrix. Create a histogram and explain its meaning. See page 206.
 
+```{r}
+linpred <- posterior_linpred(z_3, transform = T)
 
+
+print(z_3)
+
+hist(linpred[,3])
+```
 
 # Scene 5
 
 **Prompt:** Use `posterior_predict()` on `z_3` to create a matrix of predictions. Create a histogram and explain its meaning. When might it be useful to use this? See pages 136-137 for a concrete example of the use of predictive simulations.
 
+```{r}
+postpred <- posterior_predict(z_3, transform = T)
+```
 
 
 # Scene 6
